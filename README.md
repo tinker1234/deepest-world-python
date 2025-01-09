@@ -12,7 +12,8 @@ await main("main.py")
 
 # config
 ```
-packages: [] list of packages for pyodide to install
-files: list of local files so you can import exaple of files is this
+packages: list of packages for pyodide to install
+"packages": ["arrr"]
+files: list of local files so you can import
 "files": ["dw://test.py"]
 ```
