@@ -3,8 +3,6 @@ import asyncio
 import math
 import time
 from pyodide.ffi import create_proxy
-import test
-test.print_stuff()
 
 
 class Bot:
