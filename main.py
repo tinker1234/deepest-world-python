@@ -50,12 +50,10 @@ class Bot:
                 return {"found": False}
             
     def move(self, x:int, y:int) -> None:
-        self.log(str((x,y)))
         self.d.move(x, y)
     
     def moveToTarget(self, target):
         target = target['object']
-        print(target.x, target.y)
         self.move(target.x, target.y)
     
     def log(self, text: str):
@@ -131,7 +129,6 @@ class Bot:
                 return
             
             can = self.canUseSkill(skill_index, id = target['id'])
-            print("can use skill:", can)
             if can:
                 await self.useSkill(skill_index, id = target['id'])
                 self.log(f"<span style='color: green;'>Attacking {target['name']}#{target['id']}")
