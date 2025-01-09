@@ -1,4 +1,4 @@
 {
     "packages": [],
-    "files": []
+    "files": ["dw://events.py", "dw://config.py"]
 }

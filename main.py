@@ -2,38 +2,17 @@ import js
 import asyncio
 import math
 import time
-from pyodide.ffi import create_proxy
+import events
 
 
 class Bot:
     def __init__(self):
         self.d = js.dw
-        # register events
-        self.registerEvents()
+        events.Event(self)
 
-
-    def registerEvents(self):
-        self.onSkillUsedProxy = create_proxy(self.onSkillUsed)
-        self.onDrawOverProxy = create_proxy(self.onDrawOver)
-        self.onDrawUnderProxy = create_proxy(self.onDrawUnder)
-        self.onEffectCreatedProxy = create_proxy(self.onEffectCreated)
-        self.onEffectUpdatedProxy = create_proxy(self.onEffectUpdated)
-        self.onEffectDeletedProxy = create_proxy(self.onEffectDeleted)
-        self.onSkillTriggeredProxy = create_proxy(self.onSkillTriggered)
-
-        self.d.on("skillUsed", self.onSkillUsedProxy)
-        self.d.on("drawOver", self.onDrawOverProxy)
-        self.d.on("drawUnder", self.onDrawUnderProxy)
-        self.d.on("effectCreated", self.onEffectCreatedProxy)
-        self.d.on("effectUpdated", self.onEffectUpdatedProxy)
-        self.d.on("effectDeleted", self.onEffectDeletedProxy)
-        self.d.on("skillTriggered", self.onSkillTriggeredProxy)
 
     def getId(self):
         return self.d.targetId
-
-    def unregisterAllEvents(self):
-        self.d.ofAll(["skillUsed", "drawOver", "drawUnder", "effectCreated", "effectDeleted", "effectUpdated", "skillTriggered"])
 
     def findClosestTarget(self, type: str) -> dict:
         if type == "monster":
@@ -113,7 +92,7 @@ class Bot:
     async def basicAttack(self):
         target = self.findClosestTarget("monster")
         if not target['found']:
-            self.log('<span style="color: yellow;">No target found</span>')
+            self.log('<span style="color: yellow; background-color: black;">No target found</span>')
             return
         if self.getId() != target['id']:
             self.setTarget(target)
@@ -124,16 +103,16 @@ class Bot:
             return
         if not self.isOnCooldown(skill_index):
             if not self.inRange(skill_index, id = target['id']):
-                self.log(f"<span style='color: red;'>{target['name']}#{target['id']} to far moving closer</span>")
+                self.log(f"<span style='color: red; background-color: black;'>{target['name']}#{target['id']} to far moving closer</span>")
                 self.moveToTarget(target)
                 return
             
             can = self.canUseSkill(skill_index, id = target['id'])
             if can:
                 await self.useSkill(skill_index, id = target['id'])
-                self.log(f"<span style='color: green;'>Attacking {target['name']}#{target['id']}")
+                self.log(f"<span style='color: blue; background-color: black;'>Attacking {target['name']}#{target['id']}")
         else: 
-            self.log("<span style='color: red;'>Skill is on cooldown</span>")
+            self.log("<span style='color: red; background-color: black;'>Skill is on cooldown</span>")
 
     
     def isOnCooldown(self, skill_index: int) -> bool:
@@ -142,27 +121,6 @@ class Bot:
     def isOnGlobalCooldown(self) -> bool:
         return self.d.isOnGcd()
 
-    def onSkillUsed(self, data):
-        pass
-
-    def onDrawOver(self, ctx, cx, cy, *args):
-        pass
-    
-    def onDrawUnder(self, ctx, cx, cy, *args):
-        pass
-
-    def onEffectCreated(self, data):
-        pass
-
-    def onEffectDeleted(self, data):
-        pass
-
-    def onEffectUpdated(self, data):
-        pass
-
-    def onSkillTriggered(self, data):
-        pass
-    
     async def main(self):
         while True:
             await self.basicAttack()
