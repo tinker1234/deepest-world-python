@@ -5,6 +5,7 @@ class Event:
     def __init__(self, bot):
         self.bot = bot
         self.d = bot.d
+        self.party = bot.party
         self.register()
         self.events = [
             "skillUsed",
@@ -67,7 +68,14 @@ class Event:
 
     def onWhisper(self, data):
         if data.name.lower() in config.allowed:
+            dt = data.message.split(" ")
             if "-sk" in data.message:
                  self.bot.log(f"<span style='color: white; background-color: black;'>{[skill.md for skill in self.bot.getSkills() if skill]}</span>")
+            if dt[0] == "-aig":
+                self.bot.ignore.append(dt[1])
+            elif "-cig" in data.message:
+                self.bot.ignore = []
+            elif "-gig" in data.message:
+                self.bot.log(f"<span style='color: white; background-color: black;'>{self.bot.ignore}</span>")
         else:
             self.bot.log(f"<span style='color: blue; font-size: 20px; background-color: white;'>{data.name}: {data.message}")

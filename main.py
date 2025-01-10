@@ -3,30 +3,70 @@ import asyncio
 import math
 import time
 import events
-
-
+import random
+import party
+import mission
+import building
+import misc
+import entity
 class Bot:
     def __init__(self):
         self.d = js.dw
+        self.ignore = []
+        self.party = party.Party()
+        self.mission = mission.Mission()
+        self.building = building.Building()
+        self.misc = misc.Misc()
+        self.entity = entity.Entity()
         events.Event(self)
 
+    def random_xy(self):
+        try:
+            start_x = int(self.d.character.x)
+            start_y = int(self.d.character.y)
+            end_x = start_x + 5
+            end_y = start_y + 5
+            return (random.randint(start_x, abs(end_x)), random.randint(start_y, abs(end_y)))
+        except Exception as e: print('error', e)
+        
 
     def getId(self):
         return self.d.targetId
+    
+    def canGather(self, target) -> bool:
+        return self.d.canGather(target['object'])
+    
+    def findResource(self, name: str, level: int = 1):
+        n = []
+        target = self.entity.findClosest(lambda ent: ent.name.lower() == name.lower() and ent.level == level)
+        if target:
+            return {"found": True, "object": target, "id": target.id, "name": target.name}
+
+        return {"found": False}
+
+    async def gather(self, name: str = 'tree', level: int = 1):
+        target = self.findResource(name, level)
+        if not target['found']:
+            self.log("<span style='color: yellow; background-color: black;'>Can't find resource</span>")
+            x, y = self.random_xy()
+            self.move(x,y)
+            self.log(f"<span style='color: gray; background-color: black;'>moving character randomly ({x}, {y})")
+            return
+        if not self.canGather(target):
+            return
+        if not self.inRange(target=target, resource=True):
+            self.log(f"<span style='color: red; background-color: black;'>found {target['name']}#{target['id']} moving to it..</span>")
+            self.moveToTarget(target)
+            return
+        self.log(f"<span style='color: blue; background-color: black;'>gathering{target['name']}#{target['id']}...</span>")
+        self.d.gather(target['id'])
 
     def findClosestTarget(self, type: str) -> dict:
-        if type == "monster":
-            target = self.d.findClosestMonster()
-            if target:
-                return {"found": True, "id": target.id, "object": target, "name": target.name}
-            else:
-                return {"found": False}
+        target = self.entity.findClosest(lambda ent: type == ent.classMd)
+        if target:
+            return {"found": True, "id": target.id, "object": target, "name": target.name}
         else:
-            target = self.d.findClosestEntity(lambda ent: type == ent.classMd)
-            if target:
-                return {"found": True, "id": target.id, "object": target, "name": target.name}
-            else:
-                return {"found": False}
+            return {"found": False}
             
     def move(self, x:int, y:int) -> None:
         self.d.move(x, y)
@@ -51,14 +91,17 @@ class Bot:
                 skill_md = "dmg3"
         return next((i for i, skill in enumerate(self.getSkills()) if skill and skill.md == skill_md), 00   -1)
 
-    def inRange(self, skill: int,  pos: tuple = None, target: any = None, id: int = None) -> bool:
-        if pos:
-            x,y = pos
-            return self.d.isInRange(skill, x, y)
-        elif target:
-            return self.d.isInRange(skill, target)
-        elif id:
-            return self.d.isInRange(skill, id)
+    def inRange(self,  skill: int = None,  pos: tuple = None, target: any = None, id: int = None, resource: bool = False) -> bool:
+        if not resource:
+            if pos:
+                x,y = pos
+                return self.d.isInRange(skill, x, y)
+            elif target:
+                return self.d.isInRange(skill, target)
+            elif id:
+                return self.d.isInRange(skill, id)
+        else:
+            return self.d.isInGatherRange(target['object'])
     
     def canPayCost(self, skill_index: int) -> bool:
         return self.d.canPayCost(skill_index)
@@ -85,7 +128,7 @@ class Bot:
             await self.d.useSkill(skill_index, id)
 
     def isCasting(self):
-        if self.d.character.casting > time.time() * 1000:
+        if self.d.c.casting > time.time() * 1000:
             return True
         return False
     
@@ -93,9 +136,15 @@ class Bot:
         target = self.findClosestTarget("monster")
         if not target['found']:
             self.log('<span style="color: yellow; background-color: black;">No target found</span>')
+            x, y = self.random_xy()
+            self.move(x,y)
+            self.log(f"<span style='color: gray; background-color: black;'>moving character randomly ({x}, {y})")
             return
         if self.getId() != target['id']:
-            self.setTarget(target)
+            if str(target['id']) not in self.ignore:
+                self.setTarget(target)
+            if str(self.getId()) in self.ignore:
+                self.d.targetId = 0
 
         skill_index = self.checkSkillToUse()
         if skill_index <0:
@@ -123,6 +172,7 @@ class Bot:
 
     async def main(self):
         while True:
+            #await self.gather()
             await self.basicAttack()
             await asyncio.sleep(0.25)
 
