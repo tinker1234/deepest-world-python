@@ -1,6 +1,6 @@
 # deepest-world-python
 This is the base to run python in deepest world
-*** This must be run in steam client ***
+# This must be run in steam client
 # in the code section of the game
 
 put this:
