@@ -5,10 +5,10 @@ class Entity:
         self.d = js.dw
     
     def findOne(self, f):
-        self.d.findOneEntity(f)
+        return self.d.findOneEntity(f)
 
     def findClosest(self, f):
-        self.d.findClosest(f)
+        return self.d.findClosestEntity(f)
     
     def findAll(self, f):
-        self.d.findAllEntities(f)
+        return self.d.findAllEntities(f)
