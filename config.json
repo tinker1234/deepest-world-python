@@ -1,4 +1,4 @@
 {
     "packages": [],
-    "files": ["dw://events.py", "dw://config.py", "dw://party.py", "dw://mission.py", "dw://building.py", "dw://misc.py"]
+    "files": ["dw://events.py", "dw://config.py", "dw://party.py", "dw://mission.py", "dw://building.py", "dw://misc.py", "dw://entity.py"]
 }
